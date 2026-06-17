@@ -7,6 +7,9 @@ type Answer = {
   confidence: string;
   labels: string[];
   safety: string[];
+  mode: "ai" | "retrieval-fallback";
+  model: string | null;
+  modelError?: string;
   sources: Array<{ id: string; title: string; status: string; href: string; snippet: string }>;
 };
 
@@ -77,7 +80,11 @@ export function AskClient() {
           <article className="whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/30 p-5 text-sm leading-6 text-zinc-100">{answer.answer}</article>
           <aside className="space-y-3">
             <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">Confidence</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">Mode</p>
+              <p className="mt-1 font-semibold text-cyan-100">{answer.mode === "ai" ? "AI model" : "grounded fallback"}</p>
+              <p className="mt-1 text-xs text-zinc-400">{answer.model || "no model call"}</p>
+              {answer.modelError ? <p className="mt-2 text-xs leading-5 text-amber-200">Model fallback: {answer.modelError}</p> : null}
+              <p className="mt-3 text-xs uppercase tracking-[0.25em] text-zinc-500">Confidence</p>
               <p className="mt-1 font-semibold text-cyan-100">{answer.confidence}</p>
               <p className="mt-3 text-xs uppercase tracking-[0.25em] text-zinc-500">Labels</p>
               <p className="mt-1 text-sm text-zinc-200">{answer.labels.length ? answer.labels.join(", ") : "general"}</p>

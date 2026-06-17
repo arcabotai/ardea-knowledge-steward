@@ -1,4 +1,7 @@
+import { generateText } from "ai";
 import { searchKnowledge } from "./knowledge";
+
+const DEFAULT_MODEL = "anthropic/claude-sonnet-4.6";
 
 export type ArdeaAnswer = {
   answer: string;
@@ -6,6 +9,9 @@ export type ArdeaAnswer = {
   labels: string[];
   sources: Array<{ id: string; title: string; status: string; href: string; snippet: string }>;
   safety: string[];
+  mode: "ai" | "retrieval-fallback";
+  model: string | null;
+  modelError?: string;
 };
 
 function classify(question: string): { labels: string[]; safety: string[] } {
@@ -26,7 +32,7 @@ function classify(question: string): { labels: string[]; safety: string[] } {
   return { labels: [...labels], safety: [...safety] };
 }
 
-export function answerQuestion(question: string): ArdeaAnswer {
+function baseAnswer(question: string): Omit<ArdeaAnswer, "mode" | "model" | "modelError"> {
   const hits = searchKnowledge(question, 4);
   const { labels, safety } = classify(question);
   if (hits.length === 0) {
@@ -60,4 +66,83 @@ export function answerQuestion(question: string): ArdeaAnswer {
     sources: hits.map((hit) => ({ id: hit.id, title: hit.title, status: hit.status, href: hit.href, snippet: hit.snippet })),
     answer,
   };
+}
+
+export function answerQuestion(question: string): ArdeaAnswer {
+  return { ...baseAnswer(question), mode: "retrieval-fallback", model: null };
+}
+
+function aiEnabled(): boolean {
+  return process.env.ARDEA_DISABLE_AI !== "1" && process.env.ARDEA_AI_ENABLED !== "0";
+}
+
+function modelId(): string {
+  return process.env.ARDEA_MODEL || DEFAULT_MODEL;
+}
+
+function sourceContext(answer: Omit<ArdeaAnswer, "mode" | "model" | "modelError">): string {
+  return answer.sources
+    .map((source, index) => [
+      `SOURCE ${index + 1}: ${source.title}`,
+      `id: ${source.id}`,
+      `status: ${source.status}`,
+      `snippet: ${source.snippet}`,
+    ].join("\n"))
+    .join("\n\n");
+}
+
+function safeError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  return raw.replace(/Bearer\s+[A-Za-z0-9._-]+/g, "Bearer [redacted]").slice(0, 360);
+}
+
+export async function answerQuestionWithModel(question: string): Promise<ArdeaAnswer> {
+  const fallback = baseAnswer(question);
+  const model = modelId();
+
+  if (!aiEnabled() || fallback.sources.length === 0) {
+    return { ...fallback, mode: "retrieval-fallback", model: null };
+  }
+
+  try {
+    const { text } = await generateText({
+      model,
+      temperature: 0.2,
+      maxOutputTokens: 700,
+      timeout: 20_000,
+      system: [
+        "You are Ardea, the Hypersnap knowledge steward for builders and node operators.",
+        "Answer using only the provided source context. If the context is thin, say what is unknown and route to a human/source.",
+        "Keep Farcaster protocol, Farcaster app/client, Snapchain, Hypersnap, node ops, tokenomics, QNS/recovery, and governance layers separate.",
+        "Never ask for seed phrases, recovery phrases, private keys, app signer secrets, or screenshots of secrets.",
+        "For $SNAP/Hypria/token/price/claim questions: educational only, no investment advice, no guaranteed rewards, and mention source/currentness caveats.",
+        "Do not make farcaster.xyz, hosted APIs, Mini Apps, or Farcaster Snaps sound like permanent core Hypersnap infrastructure unless the source says so.",
+        "Format: direct answer first, then bullets, then 'Sources' with source ids in brackets. Keep it concise but actually helpful.",
+      ].join("\n"),
+      prompt: [
+        `Question: ${question}`,
+        "",
+        `Layer labels: ${fallback.labels.length ? fallback.labels.join(", ") : "general"}`,
+        fallback.safety.length ? `Safety notes to preserve: ${fallback.safety.join(" ")}` : "Safety notes: none triggered by classifier.",
+        "",
+        "Source context:",
+        sourceContext(fallback),
+      ].join("\n"),
+    });
+
+    const trimmed = text.trim();
+    return {
+      ...fallback,
+      answer: trimmed || fallback.answer,
+      mode: "ai",
+      model,
+    };
+  } catch (error) {
+    return {
+      ...fallback,
+      mode: "retrieval-fallback",
+      model,
+      modelError: safeError(error),
+    };
+  }
 }

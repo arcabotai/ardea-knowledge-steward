@@ -8,7 +8,7 @@ Ardea is the Arca heron steward/nodekeeper for Hypersnap and the broader Farcast
 
 - **Eve agent** under `agent/` with instructions, tools, skills, and a public HTTP channel.
 - **OKF-style knowledge bundle** under `knowledge/` using Markdown + YAML frontmatter.
-- **Ask Ardea web UI** backed by `/api/ask`, with deterministic local answers when no model key is configured.
+- **Ask Ardea web UI** backed by `/api/ask`. In production it calls a real AI model through Vercel AI Gateway, constrained by the local knowledge bundle. If auth/model calls fail, it falls back to deterministic retrieval instead of hallucinating.
 - **Node-status probe** at `/api/node-status` for public reachability checks. It does not overclaim full sync health.
 - **$SNAP market endpoint** at `/api/snap-market` that corrects FDV math using the user-confirmed 200B supply.
 - **Farcaster/Hypersnap channel scaffold** under `integrations/` for the future mention bot.
@@ -44,6 +44,22 @@ curl -sS http://localhost:3000/api/ask       -H 'content-type: application/json'
 curl -sS http://localhost:3000/api/node-status | jq
 curl -sS http://localhost:3000/api/snap-market | jq
 ```
+
+## Model behavior
+
+`/api/ask` uses `generateText` from the Vercel AI SDK with `ARDEA_MODEL` defaulting to `anthropic/claude-sonnet-4.6`. It sends only retrieved knowledge snippets plus Ardea's safety rules to the model.
+
+Production on Vercel can authenticate to AI Gateway with deployment OIDC. For local development, either run through `vercel dev`, pull Vercel env, or set `AI_GATEWAY_API_KEY` yourself.
+
+Operational knobs:
+
+```bash
+ARDEA_MODEL=anthropic/claude-sonnet-4.6
+ARDEA_AI_ENABLED=1       # set 0 to force deterministic retrieval
+ARDEA_DISABLE_AI=1       # emergency hard-disable
+```
+
+The API has a small in-memory throttle and a question length cap. That is not a full anti-abuse layer; add a durable rate limiter before making a high-traffic public launch.
 
 ## Knowledge bundle
 
