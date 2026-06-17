@@ -164,12 +164,19 @@ export async function answerQuestionWithModel(question: string, history: ChatMes
 
   for (const model of modelCandidates()) {
     lastModel = model;
+    let timedOut = false;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, 15_000);
+
     try {
       const { text } = await generateText({
         model,
         temperature: 0.2,
         maxOutputTokens: 850,
-        timeout: 20_000,
+        abortSignal: controller.signal,
         system: [
           "You are Ardea, the Hypersnap field desk for builders and node operators.",
           "Answer using only the provided source context and the recent conversation. If the source context is thin, say what is unknown. If it is enough, answer directly.",
@@ -202,6 +209,9 @@ export async function answerQuestionWithModel(question: string, history: ChatMes
       };
     } catch (error) {
       lastError = error;
+      if (timedOut) break;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
