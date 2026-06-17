@@ -1,6 +1,6 @@
 {
   "name": "ardea-knowledge-steward",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "imports": {
     "#*": "./agent/*",
@@ -10,7 +10,11 @@
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
-    "typecheck": "tsgo --noEmit -p tsconfig.json"
+    "typecheck": "tsgo --noEmit -p tsconfig.json",
+    "test": "node --test tests/*.test.mjs",
+    "eve:build": "eve build",
+    "eve:dev": "eve dev",
+    "verify": "npm run test && npm run typecheck && npm run build"
   },
   "dependencies": {
     "@vercel/connect": "0.2.2",
@@ -56,5 +60,25 @@
   },
   "engines": {
     "node": "24.x"
-  }
+  },
+  "description": "Ardea Knowledge Steward: an Eve/Vercel agent for Hypersnap, Snapchain, and Farcaster-fork Q&A with provenance.",
+  "private": false,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arcabotai/ardea-knowledge-steward.git"
+  },
+  "bugs": {
+    "url": "https://github.com/arcabotai/ardea-knowledge-steward/issues"
+  },
+  "homepage": "https://github.com/arcabotai/ardea-knowledge-steward#readme",
+  "keywords": [
+    "hypersnap",
+    "farcaster",
+    "snapchain",
+    "ardea",
+    "vercel-eve",
+    "agent",
+    "okf"
+  ]
 }

@@ -20,8 +20,9 @@ const mono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ardea-knowledge-steward",
-  description: "A Next.js starter for eve agents with AI Elements.",
+  title: "Ask Ardea — Hypersnap Knowledge Steward",
+  description:
+    "A public Hypersnap, Snapchain, and Farcaster-fork Q&A agent with provenance labels and safety rails.",
 };
 
 export default function RootLayout({ children }: { readonly children: ReactNode }) {
