@@ -34,6 +34,12 @@ test("Q name recovery questions retrieve the QNS safety document first", async (
   assert.equal(top.id, "qns/recovery-safety");
 });
 
+test("general Hypersnap questions do not trigger token warning classifier", () => {
+  const answerSource = fs.readFileSync(path.join(root, "lib/answer.ts"), "utf8");
+  assert.ok(!answerSource.includes("/snap|hypria|token|claim|fdv|price|airdrop|reward/"));
+  assert.match(answerSource, /\\\$snap\|hypria/);
+});
+
 test("$SNAP supply constants are documented", () => {
   const doc = fs.readFileSync(path.join(root, "knowledge/token/snap-and-hypria.md"), "utf8");
   assert.match(doc, /200,000,000,000/);

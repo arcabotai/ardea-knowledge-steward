@@ -2,41 +2,27 @@ import { AskClient } from "./ask-client";
 
 export default function Page() {
   return (
-    <main className="min-h-screen bg-[#05070a] text-white">
-      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-5 py-10 md:px-8 md:py-16">
-        <section className="grid gap-8 lg:grid-cols-[1.05fr_.95fr] lg:items-end">
-          <div>
-            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">Ardea Knowledge Steward</p>
-            <h1 className="mt-5 max-w-4xl text-5xl font-semibold tracking-[-0.05em] text-white md:text-7xl">
-              Public answers for Hypersnap, Snapchain, and Farcaster-fork builders.
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-300">
-              Ask Ardea about protocol layers, node operations, QNS/recovery safety, $SNAP caveats, governance proposals, and builder paths. Answers are grounded in a Markdown knowledge bundle and include provenance labels.
+    <main className="min-h-screen bg-[#f7f3ea] text-[#171714]">
+      <div className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-5 py-6 md:px-8">
+        <header className="flex items-center justify-between text-sm text-[#6d675e]">
+          <p className="font-medium text-[#24211d]">Ardea</p>
+          <p>Hypersnap field desk</p>
+        </header>
+
+        <section className="flex flex-1 flex-col justify-center py-12 md:py-20">
+          <div className="mb-7 max-w-2xl">
+            <h1 className="text-4xl font-medium tracking-[-0.04em] text-[#171714] md:text-6xl">Ask Ardea.</h1>
+            <p className="mt-3 max-w-xl text-base leading-7 text-[#6d675e] md:text-lg">
+              Ask about Hypersnap, Snapchain, Farcaster forks, node ops, recovery safety, or $SNAP caveats. Ardea answers with sources when it has them.
             </p>
           </div>
-          <div className="rounded-[2rem] border border-cyan-300/20 bg-cyan-300/10 p-5 text-sm leading-7 text-cyan-50">
-            <p className="font-semibold">Answer policy</p>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-cyan-50/90">
-              <li>Verified vs inferred vs proposal-stage labels.</li>
-              <li>No seed phrase, private-key, or recovery-phrase handling.</li>
-              <li>No investment advice. Token data is educational and source-labelled.</li>
-              <li>Farcaster compatibility without pretending farcaster.xyz is core infrastructure.</li>
-            </ul>
-          </div>
+
+          <AskClient />
         </section>
-        <AskClient />
-        <section className="grid gap-4 md:grid-cols-3">
-          {[
-            ["Protocol", "Farcaster protocol, Snapchain, signers, casts, and fork-compatible infrastructure."],
-            ["Operators", "Node health framed as alive, connected, synced, and resourced — not lazy green-check theater."],
-            ["Safety", "Recovery, QNS, token, and governance answers keep secrets private and status caveats visible."],
-          ].map(([title, body]) => (
-            <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-              <h2 className="font-semibold text-zinc-100">{title}</h2>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">{body}</p>
-            </div>
-          ))}
-        </section>
+
+        <footer className="pb-2 text-xs leading-5 text-[#8a8379]">
+          Do not paste seed phrases, private keys, recovery phrases, or signer secrets. Ever.
+        </footer>
       </div>
     </main>
   );

@@ -22,7 +22,7 @@ function classify(question: string): { labels: string[]; safety: string[] } {
     labels.add("identity/recovery");
     safety.add("Never paste seed phrases, recovery phrases, private keys, or signer secrets into chat, DMs, screenshots, or unverified sites.");
   }
-  if (/snap|hypria|token|claim|fdv|price|airdrop|reward/.test(q)) {
+  if (/(\$snap|hypria|\btoken\b|\bclaim\b|\bfdv\b|\bprice\b|\bairdrop\b|\breward\b|dexscreener|\bsupply\b)/.test(q)) {
     labels.add("tokenomics");
     safety.add("Educational only, not financial advice. Eligibility, supply, and claim state need current source verification.");
   }

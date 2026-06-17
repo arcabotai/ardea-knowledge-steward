@@ -20,9 +20,8 @@ const mono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ask Ardea — Hypersnap Knowledge Steward",
-  description:
-    "A public Hypersnap, Snapchain, and Farcaster-fork Q&A agent with provenance labels and safety rails.",
+  title: "Ask Ardea",
+  description: "A minimalist Hypersnap field desk for asking sourced protocol, node, recovery, and token questions.",
 };
 
 export default function RootLayout({ children }: { readonly children: ReactNode }) {

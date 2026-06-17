@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, KeyboardEvent, useState } from "react";
+import { Streamdown } from "streamdown";
 
 type Answer = {
   answer: string;
@@ -13,27 +14,25 @@ type Answer = {
   sources: Array<{ id: string; title: string; status: string; href: string; snippet: string }>;
 };
 
-const examples = [
-  "What is Hypersnap and how is it related to Farcaster?",
-  "How do I tell if a Snapchain node is actually healthy?",
-  "What should I know before recovering a Q name?",
-  "Why can Dexscreener FDV be wrong for $SNAP?",
-];
-
 export function AskClient() {
-  const [question, setQuestion] = useState(examples[0]);
+  const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function ask(nextQuestion = question) {
+    const cleanQuestion = nextQuestion.trim();
+    if (!cleanQuestion || loading) return;
+
+    setQuestion(cleanQuestion);
     setLoading(true);
     setError(null);
+
     try {
       const response = await fetch("/api/ask", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ question: nextQuestion }),
+        body: JSON.stringify({ question: cleanQuestion }),
       });
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || "Ask failed");
@@ -45,65 +44,76 @@ export function AskClient() {
     }
   }
 
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void ask();
+  }
+
+  function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+      event.preventDefault();
+      void ask();
+    }
+  }
+
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 shadow-2xl shadow-black/30 md:p-6">
-      <div className="flex flex-wrap gap-2 pb-4">
-        {examples.map((example) => (
-          <button
-            key={example}
-            onClick={() => { setQuestion(example); void ask(example); }}
-            className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-left text-xs text-cyan-100 transition hover:bg-cyan-300/20"
-          >
-            {example}
-          </button>
-        ))}
-      </div>
-      <label className="block text-sm font-medium text-zinc-200" htmlFor="question">Ask Ardea</label>
-      <div className="mt-2 flex flex-col gap-3 md:flex-row">
+    <div className="w-full max-w-3xl">
+      <form onSubmit={submit} className="rounded-[1.75rem] border border-[#ded6ca] bg-[#fffaf2] p-3 shadow-[0_24px_80px_rgba(34,28,18,0.08)]">
+        <label className="sr-only" htmlFor="question">Ask Ardea</label>
         <textarea
           id="question"
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
-          className="min-h-24 flex-1 rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-white outline-none ring-cyan-400/40 placeholder:text-zinc-500 focus:ring-2"
+          onKeyDown={onKeyDown}
+          placeholder="Ask a Hypersnap question..."
+          className="min-h-32 w-full resize-none rounded-[1.25rem] border-0 bg-transparent px-3 py-3 text-[17px] leading-7 text-[#171714] outline-none placeholder:text-[#aaa196]"
         />
-        <button
-          onClick={() => void ask()}
-          disabled={loading}
-          className="rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? "Asking…" : "Ask"}
-        </button>
-      </div>
-      {error ? <p className="mt-4 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-100">{error}</p> : null}
+        <div className="flex flex-col gap-3 border-t border-[#eee5d9] px-2 pt-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-[#8a8379]">Press Cmd/Ctrl + Enter to ask.</p>
+          <button
+            type="submit"
+            disabled={loading || !question.trim()}
+            className="rounded-full bg-[#171714] px-5 py-2.5 text-sm font-medium text-[#fffaf2] transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {loading ? "Asking" : "Ask"}
+          </button>
+        </div>
+      </form>
+
+      {error ? <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p> : null}
+
       {answer ? (
-        <div className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_.8fr]">
-          <article className="whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/30 p-5 text-sm leading-6 text-zinc-100">{answer.answer}</article>
-          <aside className="space-y-3">
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">Mode</p>
-              <p className="mt-1 font-semibold text-cyan-100">{answer.mode === "ai" ? "AI model" : "grounded fallback"}</p>
-              <p className="mt-1 text-xs text-zinc-400">{answer.model || "no model call"}</p>
-              {answer.modelError ? <p className="mt-2 text-xs leading-5 text-amber-200">Model fallback: {answer.modelError}</p> : null}
-              <p className="mt-3 text-xs uppercase tracking-[0.25em] text-zinc-500">Confidence</p>
-              <p className="mt-1 font-semibold text-cyan-100">{answer.confidence}</p>
-              <p className="mt-3 text-xs uppercase tracking-[0.25em] text-zinc-500">Labels</p>
-              <p className="mt-1 text-sm text-zinc-200">{answer.labels.length ? answer.labels.join(", ") : "general"}</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">Sources</p>
-              <div className="mt-3 space-y-3">
+        <section className="mt-8 rounded-[1.75rem] border border-[#ded6ca] bg-[#fffaf2] p-5 shadow-[0_24px_80px_rgba(34,28,18,0.06)] md:p-7">
+          <article className="answer-markdown text-[15px] leading-7 text-[#25221d] md:text-base">
+            <Streamdown mode="static">{answer.answer}</Streamdown>
+          </article>
+
+          <div className="mt-6 border-t border-[#eee5d9] pt-4">
+            <details className="group">
+              <summary className="cursor-pointer list-none text-sm text-[#756f66] marker:hidden">
+                <span className="border-b border-[#c8beb0]">Sources</span>
+                <span className="ml-2 text-xs text-[#aaa196]">{answer.sources.length || "none"}</span>
+              </summary>
+              <div className="mt-4 space-y-3">
                 {answer.sources.map((source) => (
-                  <div key={source.id} className="rounded-xl bg-white/[0.04] p-3">
-                    <p className="font-medium text-zinc-100">{source.title}</p>
-                    <p className="text-xs text-cyan-200">{source.status} · {source.id}</p>
-                    <p className="mt-1 text-xs leading-5 text-zinc-400">{source.snippet}</p>
+                  <div key={source.id} className="rounded-2xl border border-[#eee5d9] bg-[#fbf5eb] p-4">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                      <p className="text-sm font-medium text-[#25221d]">{source.title}</p>
+                      <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[#8a8379]">{source.status}</p>
+                    </div>
+                    <p className="mt-1 font-mono text-xs text-[#756f66]">{source.id}</p>
+                    <p className="mt-2 text-sm leading-6 text-[#5c554d]">{source.snippet}</p>
                   </div>
                 ))}
               </div>
-            </div>
-          </aside>
-        </div>
+            </details>
+            <p className="mt-4 text-xs text-[#aaa196]">
+              {answer.mode === "ai" ? "AI answer" : "Fallback answer"} · {answer.confidence}
+              {answer.modelError ? ` · model fallback: ${answer.modelError}` : ""}
+            </p>
+          </div>
+        </section>
       ) : null}
-    </section>
+    </div>
   );
 }

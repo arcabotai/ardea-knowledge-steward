@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "streamdown/styles.css";
 @source "../node_modules/streamdown/dist/*.js";
 
 @theme inline {
@@ -30,50 +31,25 @@
 
 :root {
   color-scheme: light;
-  /* Soft neutral page with white elevated surfaces so cards/composer pop. */
-  --background: oklch(0.971 0 0);
-  --foreground: oklch(0.16 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0 0);
-  --primary: oklch(0.19 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.94 0 0);
-  --secondary-foreground: oklch(0.19 0 0);
-  --muted: oklch(0.94 0 0);
-  --muted-foreground: oklch(0.6 0 0);
-  --accent: oklch(0.94 0 0);
-  --accent-foreground: oklch(0.19 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.916 0 0);
-  --input: oklch(0.916 0 0);
-  --ring: oklch(0.708 0 0);
+  --background: #f7f3ea;
+  --foreground: #171714;
+  --card: #fffaf2;
+  --card-foreground: #171714;
+  --popover: #fffaf2;
+  --popover-foreground: #171714;
+  --primary: #171714;
+  --primary-foreground: #fffaf2;
+  --secondary: #eee5d9;
+  --secondary-foreground: #171714;
+  --muted: #eee5d9;
+  --muted-foreground: #756f66;
+  --accent: #eee5d9;
+  --accent-foreground: #171714;
+  --destructive: #b42318;
+  --border: #ded6ca;
+  --input: #ded6ca;
+  --ring: #8a8379;
   --radius: 0.625rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-  }
 }
 
 * {
@@ -88,6 +64,7 @@ body {
   min-height: 100%;
   margin: 0;
   background: var(--background);
+  color: var(--foreground);
   font-family: var(--font-sans);
 }
 
@@ -95,4 +72,46 @@ button,
 input,
 textarea {
   font: inherit;
+}
+
+textarea::selection,
+.answer-markdown ::selection {
+  background: #ded6ca;
+}
+
+.answer-markdown p {
+  margin: 0 0 1rem;
+}
+
+.answer-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.answer-markdown ul,
+.answer-markdown ol {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+}
+
+.answer-markdown li {
+  margin: 0.35rem 0;
+}
+
+.answer-markdown strong {
+  font-weight: 600;
+  color: #171714;
+}
+
+.answer-markdown a {
+  color: #171714;
+  text-decoration: underline;
+  text-decoration-color: #bdb3a5;
+  text-underline-offset: 3px;
+}
+
+.answer-markdown code {
+  border-radius: 0.375rem;
+  background: #eee5d9;
+  padding: 0.08rem 0.3rem;
+  font-size: 0.9em;
 }
