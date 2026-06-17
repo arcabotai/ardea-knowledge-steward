@@ -28,6 +28,12 @@ test("safety instructions reject secret collection", () => {
   assert.match(instructions, /no investment advice/i);
 });
 
+test("Q name recovery questions retrieve the QNS safety document first", async () => {
+  const { searchKnowledge } = await import("../lib/knowledge.ts");
+  const [top] = searchKnowledge("What should I know before recovering a Q name?", 3);
+  assert.equal(top.id, "qns/recovery-safety");
+});
+
 test("$SNAP supply constants are documented", () => {
   const doc = fs.readFileSync(path.join(root, "knowledge/token/snap-and-hypria.md"), "utf8");
   assert.match(doc, /200,000,000,000/);

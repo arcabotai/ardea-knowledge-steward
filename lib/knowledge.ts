@@ -68,7 +68,35 @@ export function loadKnowledge(): KnowledgeDoc[] {
 }
 
 function tokenize(input: string): string[] {
-  return input.toLowerCase().match(/[a-z0-9$]+/g)?.filter((t) => t.length > 2) || [];
+  const lower = input.toLowerCase();
+  const raw = lower.match(/[a-z0-9$]+/g)?.filter((t) => t.length > 1) || [];
+  const terms = new Set<string>();
+
+  for (const term of raw) {
+    if (term.length > 2 || term === "q") terms.add(term);
+    if (term.endsWith("ing") && term.length > 5) terms.add(term.slice(0, -3));
+    if (term.endsWith("ed") && term.length > 4) terms.add(term.slice(0, -2));
+    if (term.endsWith("s") && term.length > 4) terms.add(term.slice(0, -1));
+  }
+
+  const add = (...items: string[]) => items.forEach((item) => terms.add(item));
+  if (/\b(q\s*name|qns|recover|recovery|seed|phrase|private key|owner wallet)\b/.test(lower)) {
+    add("qns", "recovery", "recover", "identity", "safety", "owner", "wallet", "phrase");
+  }
+  if (/\b(node|health|sync|peer|lag|doctor|operator)\b/.test(lower)) {
+    add("node", "health", "snapchain", "operator", "sync", "lag", "doctor");
+  }
+  if (/\b(\$snap|snap|fdv|dexscreener|hypria|token|claim)\b/.test(lower)) {
+    add("$snap", "snap", "fdv", "dexscreener", "hypria", "tokenomics", "supply");
+  }
+  if (/\b(farcaster|fork|protocol|signer|fid|cast)\b/.test(lower)) {
+    add("farcaster", "protocol", "fid", "signer", "cast", "fork");
+  }
+  if (/\b(hypersnap|what is hypersnap|independent)\b/.test(lower)) {
+    add("hypersnap", "independent", "farcaster", "snapchain");
+  }
+
+  return [...terms];
 }
 
 export function searchKnowledge(query: string, limit = 5): Array<KnowledgeDoc & { score: number; snippet: string }> {
@@ -76,8 +104,10 @@ export function searchKnowledge(query: string, limit = 5): Array<KnowledgeDoc & 
   const docs = loadKnowledge();
   return docs
     .map((doc) => {
-      const haystack = `${doc.title} ${doc.description} ${doc.tags.join(" ")} ${doc.body}`.toLowerCase();
-      const score = terms.reduce((sum, term) => sum + (haystack.includes(term) ? 1 : 0), 0);
+      const haystack = `${doc.id} ${doc.title} ${doc.description} ${doc.type} ${doc.tags.join(" ")} ${doc.body}`.toLowerCase();
+      let score = terms.reduce((sum, term) => sum + (haystack.includes(term) ? 1 : 0), 0);
+      if (doc.id === "index") score -= 1;
+      if (doc.id.startsWith("sources/")) score -= 0.5;
       const firstParagraph = doc.body.split(/\n\s*\n/).find((p) => p.trim() && !p.startsWith("#")) || doc.description;
       return { ...doc, score, snippet: firstParagraph.replace(/\s+/g, " ").slice(0, 420) };
     })
