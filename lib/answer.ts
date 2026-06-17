@@ -1,7 +1,7 @@
 import { generateText } from "ai";
 import { searchKnowledge } from "./knowledge";
 
-const DEFAULT_MODEL = "anthropic/claude-sonnet-4.6";
+const DEFAULT_MODEL = "openai/gpt-5.4-mini";
 
 export type ArdeaAnswer = {
   answer: string;
@@ -76,8 +76,13 @@ function aiEnabled(): boolean {
   return process.env.ARDEA_DISABLE_AI !== "1" && process.env.ARDEA_AI_ENABLED !== "0";
 }
 
-function modelId(): string {
-  return process.env.ARDEA_MODEL || DEFAULT_MODEL;
+function modelCandidates(): string[] {
+  const configured = (process.env.ARDEA_MODEL || DEFAULT_MODEL)
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const fallbacks = ["openai/gpt-5.4-mini", "openai/gpt-5.4-nano", "anthropic/claude-haiku-4.5"];
+  return [...new Set([...configured, ...fallbacks])];
 }
 
 function sourceContext(answer: Omit<ArdeaAnswer, "mode" | "model" | "modelError">): string {
@@ -98,51 +103,58 @@ function safeError(error: unknown): string {
 
 export async function answerQuestionWithModel(question: string): Promise<ArdeaAnswer> {
   const fallback = baseAnswer(question);
-  const model = modelId();
 
   if (!aiEnabled() || fallback.sources.length === 0) {
     return { ...fallback, mode: "retrieval-fallback", model: null };
   }
 
-  try {
-    const { text } = await generateText({
-      model,
-      temperature: 0.2,
-      maxOutputTokens: 700,
-      timeout: 20_000,
-      system: [
-        "You are Ardea, the Hypersnap knowledge steward for builders and node operators.",
-        "Answer using only the provided source context. If the context is thin, say what is unknown and route to a human/source.",
-        "Keep Farcaster protocol, Farcaster app/client, Snapchain, Hypersnap, node ops, tokenomics, QNS/recovery, and governance layers separate.",
-        "Never ask for seed phrases, recovery phrases, private keys, app signer secrets, or screenshots of secrets.",
-        "For $SNAP/Hypria/token/price/claim questions: educational only, no investment advice, no guaranteed rewards, and mention source/currentness caveats.",
-        "Do not make farcaster.xyz, hosted APIs, Mini Apps, or Farcaster Snaps sound like permanent core Hypersnap infrastructure unless the source says so.",
-        "Format: direct answer first, then bullets, then 'Sources' with source ids in brackets. Keep it concise but actually helpful.",
-      ].join("\n"),
-      prompt: [
-        `Question: ${question}`,
-        "",
-        `Layer labels: ${fallback.labels.length ? fallback.labels.join(", ") : "general"}`,
-        fallback.safety.length ? `Safety notes to preserve: ${fallback.safety.join(" ")}` : "Safety notes: none triggered by classifier.",
-        "",
-        "Source context:",
-        sourceContext(fallback),
-      ].join("\n"),
-    });
+  let lastModel = modelCandidates()[0] || DEFAULT_MODEL;
+  let lastError: unknown;
 
-    const trimmed = text.trim();
-    return {
-      ...fallback,
-      answer: trimmed || fallback.answer,
-      mode: "ai",
-      model,
-    };
-  } catch (error) {
-    return {
-      ...fallback,
-      mode: "retrieval-fallback",
-      model,
-      modelError: safeError(error),
-    };
+  for (const model of modelCandidates()) {
+    lastModel = model;
+    try {
+      const { text } = await generateText({
+        model,
+        temperature: 0.2,
+        maxOutputTokens: 700,
+        timeout: 20_000,
+        system: [
+          "You are Ardea, the Hypersnap knowledge steward for builders and node operators.",
+          "Answer using only the provided source context. If the context is thin, say what is unknown and route to a human/source.",
+          "Keep Farcaster protocol, Farcaster app/client, Snapchain, Hypersnap, node ops, tokenomics, QNS/recovery, and governance layers separate.",
+          "Never ask for seed phrases, recovery phrases, private keys, app signer secrets, or screenshots of secrets.",
+          "For $SNAP/Hypria/token/price/claim questions: educational only, no investment advice, no guaranteed rewards, and mention source/currentness caveats.",
+          "Do not make farcaster.xyz, hosted APIs, Mini Apps, or Farcaster Snaps sound like permanent core Hypersnap infrastructure unless the source says so.",
+          "Format: direct answer first, then bullets, then 'Sources' with source ids in brackets. Keep it concise but actually helpful.",
+        ].join("\n"),
+        prompt: [
+          `Question: ${question}`,
+          "",
+          `Layer labels: ${fallback.labels.length ? fallback.labels.join(", ") : "general"}`,
+          fallback.safety.length ? `Safety notes to preserve: ${fallback.safety.join(" ")}` : "Safety notes: none triggered by classifier.",
+          "",
+          "Source context:",
+          sourceContext(fallback),
+        ].join("\n"),
+      });
+
+      const trimmed = text.trim();
+      return {
+        ...fallback,
+        answer: trimmed || fallback.answer,
+        mode: "ai",
+        model,
+      };
+    } catch (error) {
+      lastError = error;
+    }
   }
+
+  return {
+    ...fallback,
+    mode: "retrieval-fallback",
+    model: lastModel,
+    modelError: safeError(lastError),
+  };
 }

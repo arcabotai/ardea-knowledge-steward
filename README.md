@@ -47,14 +47,14 @@ curl -sS http://localhost:3000/api/snap-market | jq
 
 ## Model behavior
 
-`/api/ask` uses `generateText` from the Vercel AI SDK with `ARDEA_MODEL` defaulting to `anthropic/claude-sonnet-4.6`. It sends only retrieved knowledge snippets plus Ardea's safety rules to the model.
+`/api/ask` uses `generateText` from the Vercel AI SDK with `ARDEA_MODEL` defaulting to `openai/gpt-5.4-mini`. It sends only retrieved knowledge snippets plus Ardea's safety rules to the model. You can set `ARDEA_MODEL` to a comma-separated fallback chain; Ardea will try each model before using deterministic retrieval.
 
 Production on Vercel can authenticate to AI Gateway with deployment OIDC. For local development, either run through `vercel dev`, pull Vercel env, or set `AI_GATEWAY_API_KEY` yourself.
 
 Operational knobs:
 
 ```bash
-ARDEA_MODEL=anthropic/claude-sonnet-4.6
+ARDEA_MODEL=openai/gpt-5.4-mini
 ARDEA_AI_ENABLED=1       # set 0 to force deterministic retrieval
 ARDEA_DISABLE_AI=1       # emergency hard-disable
 ```
