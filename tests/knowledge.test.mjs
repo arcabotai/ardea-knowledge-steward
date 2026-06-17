@@ -34,6 +34,12 @@ test("Q name recovery questions retrieve the QNS safety document first", async (
   assert.equal(top.id, "qns/recovery-safety");
 });
 
+test("node setup questions retrieve the setup runbook first", async () => {
+  const { searchKnowledge } = await import("../lib/knowledge.ts");
+  const [top] = searchKnowledge("How do I setup a hypersnap node on my server?", 5);
+  assert.equal(top.id, "node-ops/setup");
+});
+
 test("general Hypersnap questions do not trigger token warning classifier", () => {
   const answerSource = fs.readFileSync(path.join(root, "lib/answer.ts"), "utf8");
   assert.ok(!answerSource.includes("/snap|hypria|token|claim|fdv|price|airdrop|reward/"));

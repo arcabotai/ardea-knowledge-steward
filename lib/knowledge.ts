@@ -12,6 +12,7 @@ export type KnowledgeDoc = {
   status: KnowledgeStatus;
   body: string;
   href: string;
+  sourceUrl?: string;
 };
 
 function parseFrontmatter(raw: string): { frontmatter: Record<string, string | string[]>; body: string } {
@@ -63,6 +64,7 @@ export function loadKnowledge(): KnowledgeDoc[] {
       status: String(frontmatter.status || "unknown"),
       body,
       href: `/knowledge/${rel}`,
+      sourceUrl: typeof frontmatter.source_url === "string" ? frontmatter.source_url : undefined,
     };
   });
 }
@@ -83,8 +85,8 @@ function tokenize(input: string): string[] {
   if (/\b(q\s*name|qns|recover|recovery|seed|phrase|private key|owner wallet)\b/.test(lower)) {
     add("qns", "recovery", "recover", "identity", "safety", "owner", "wallet", "phrase");
   }
-  if (/\b(node|health|sync|peer|lag|doctor|operator)\b/.test(lower)) {
-    add("node", "health", "snapchain", "operator", "sync", "lag", "doctor");
+  if (/\b(node|server|setup|install|docker|health|sync|peer|lag|doctor|operator|port|ports)\b/.test(lower)) {
+    add("node", "server", "setup", "install", "docker", "health", "snapchain", "operator", "sync", "lag", "doctor", "ports");
   }
   if (/\b(\$snap|snap|fdv|dexscreener|hypria|token|claim)\b/.test(lower)) {
     add("$snap", "snap", "fdv", "dexscreener", "hypria", "tokenomics", "supply");

@@ -22,6 +22,20 @@ function allowed(id: string): boolean {
   return current.count <= MAX_REQUESTS;
 }
 
+function sanitizeHistory(raw: unknown): Array<{ role: "user" | "assistant"; content: string }> {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const role = (item as { role?: unknown }).role;
+      const content = (item as { content?: unknown }).content;
+      if ((role !== "user" && role !== "assistant") || typeof content !== "string") return null;
+      return { role, content: content.trim().slice(0, 1200) };
+    })
+    .filter((item): item is { role: "user" | "assistant"; content: string } => Boolean(item?.content))
+    .slice(-8);
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const question = typeof body.question === "string" ? body.question.trim() : "";
@@ -34,5 +48,6 @@ export async function POST(request: NextRequest) {
   if (!allowed(clientId(request))) {
     return NextResponse.json({ ok: false, error: "rate limit exceeded" }, { status: 429 });
   }
-  return NextResponse.json({ ok: true, ...(await answerQuestionWithModel(question)) });
+  const history = sanitizeHistory((body as { history?: unknown }).history);
+  return NextResponse.json({ ok: true, ...(await answerQuestionWithModel(question, history)) });
 }
