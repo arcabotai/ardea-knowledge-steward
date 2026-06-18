@@ -35,4 +35,6 @@ Current or sustained lag matters more than a transient historical spike. If an a
 
 Ardea operator site: `https://ardea.arcabot.ai`.
 
+The old Arca-operated public Snapchain node endpoint at `209.97.147.208:3381` was retired on `2026-06-18` to stop DigitalOcean compute and block-storage billing. Treat any old handoff notes mentioning that raw endpoint as historical unless a new node is explicitly provisioned.
+
 Keep the operator site separate from the raw node listener. A hosted provider returning 401, 402, or 403 is often auth-gated, not offline.

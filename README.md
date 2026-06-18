@@ -9,7 +9,7 @@ Ardea is the Arca heron steward/nodekeeper for Hypersnap and the broader Farcast
 - **Eve agent** under `agent/` with instructions, tools, skills, and a public HTTP channel.
 - **OKF-style knowledge bundle** under `knowledge/` using Markdown + YAML frontmatter.
 - **Ask Ardea web UI** backed by `/api/ask`. In production it calls a real AI model through Vercel AI Gateway, constrained by the local knowledge bundle. If auth/model calls fail, it falls back to deterministic retrieval instead of hallucinating.
-- **Node-status probe** at `/api/node-status` for public reachability checks. It does not overclaim full sync health.
+- **Node-status note** at `/api/node-status` for public Ardea reachability plus the retirement state of the old Arca-operated node. It does not advertise a live raw Snapchain endpoint.
 - **$SNAP market endpoint** at `/api/snap-market` that corrects FDV math using the user-confirmed 200B supply.
 - **Farcaster/Hypersnap channel scaffold** under `integrations/` for the future mention bot.
 

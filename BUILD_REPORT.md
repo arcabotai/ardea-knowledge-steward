@@ -44,7 +44,7 @@ curl https://ardea-knowledge-steward.vercel.app/api/snap-market
 ## Live API proof
 
 - `/api/ask` returns grounded answers with confidence, labels, safety notes, and cited knowledge snippets.
-- `/api/node-status` reached both `https://ardea.arcabot.ai` and `http://209.97.147.208:3381/v1/info` during verification. It explicitly warns that reachability is not full sync health.
+- `/api/node-status` now checks `https://ardea.arcabot.ai` and reports the former `209.97.147.208:3381` Arca-operated Snapchain node as retired. It no longer probes or advertises the decommissioned raw node endpoint.
 - `/api/snap-market` fetched Dexscreener and returned corrected FDV using the user-confirmed `200_000_000_000` total supply.
 
 ## Browser proof

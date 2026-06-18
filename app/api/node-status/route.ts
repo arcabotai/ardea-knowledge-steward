@@ -19,9 +19,16 @@ async function probe(url: string) {
 }
 
 export async function GET() {
-  const checks = await Promise.all([
-    probe("https://ardea.arcabot.ai"),
-    probe("http://209.97.147.208:3381/v1/info"),
-  ]);
-  return NextResponse.json({ ok: true, checks, note: "Reachability is not full sync health. Alive, connected, synced, and resourced must be checked separately." });
+  const checks = await Promise.all([probe("https://ardea.arcabot.ai")]);
+  return NextResponse.json({
+    ok: true,
+    checks,
+    node: {
+      name: "hypersnap-ardea",
+      status: "retired",
+      retiredAt: "2026-06-18T23:15:00Z",
+      note: "The former Arca-operated public Snapchain node was decommissioned to stop DigitalOcean compute and block-storage billing.",
+    },
+    note: "Ardea remains a Hypersnap field desk. It no longer advertises a live Arca-operated node endpoint.",
+  });
 }

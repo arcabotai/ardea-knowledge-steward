@@ -12,11 +12,19 @@ async function probe(url: string) {
 }
 
 export default defineTool({
-  description: "Probe public Ardea/Snapchain endpoints for reachability. Does not claim full sync health.",
-  inputSchema: z.object({ includeRawNode: z.boolean().default(true) }),
-  async execute({ includeRawNode }) {
-    const urls = ["https://ardea.arcabot.ai"];
-    if (includeRawNode) urls.push("http://209.97.147.208:3381/v1/info");
-    return { checks: await Promise.all(urls.map(probe)), note: "Reachability is not full sync health. Check alive, connected, synced, and resourced separately." };
+  description: "Check the public Ardea field-desk site and report that the old Arca-operated Snapchain node is retired.",
+  inputSchema: z.object({ includeRawNode: z.boolean().default(false) }),
+  async execute() {
+    const checks = await Promise.all([probe("https://ardea.arcabot.ai")]);
+    return {
+      checks,
+      node: {
+        name: "hypersnap-ardea",
+        status: "retired",
+        retiredAt: "2026-06-18T23:15:00Z",
+        note: "The former public node endpoint at 209.97.147.208:3381 was decommissioned to stop DigitalOcean compute and block-storage billing.",
+      },
+      note: "Ardea is now a knowledge/field desk, not a live Arca-operated Snapchain node status page.",
+    };
   },
 });
